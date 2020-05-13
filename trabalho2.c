@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 // Province/State,Country/Region,Lat,Long,Date,Confirmed,Deaths,Recovered
 #define TAMs 100
 #define TAMc 100
 
-typedef dado{
-	char State[TAMs], Country[TAMc], Date[10];
+typedef struct dado{
+	char state[TAMs], country[TAMc];
 	float lat, longe;
 	int conf,death,recov;
+  int dia,mes,ano;
 }Dado;
 
 
@@ -16,33 +18,27 @@ typedef dado{
 
 
 int main(){
-	
    	char c[350];
-   	int i,j;
-	Dado exemplo;	
-
-	
+   	int i,j,k,t;
+	  Dado ex[1000];	
+    char q;
 	
 	FILE *fptr;
 	fptr = fopen("covid_19_clean_complete.csv","r");
 	
    if (fptr == NULL){ //checando se o arquivo abriu
        printf("Error! opening file");
-       return 1;
+       return 0;
    }
    
+   
+   
 	fscanf(fptr, "%s", c);
-	for(i = 0; i<3; i++){
-		fscanf(fptr, "%s", c);
-		printf("%s \n", c);
-	}
-	
-	strtok(char *str, const char *delim)
-	
-	for(i = 0; i<3; i++){
-   		printf("%c", c[i])	
-	}
-	
-	
+  for(i = 0; !feof(fptr) ; i++){
+    fscanf(fptr, "%c", &q);
+    printf("%c", q);
+
+
+  }
 	return 0;
 }
