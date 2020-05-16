@@ -5,12 +5,14 @@
 // Province/State,Country/Region,Lat,Long,Date,Confirmed,Deaths,Recovered
 #define TAMs 50
 #define TAMc 50
+#define INFINITY 1000000000 //numero para ser usado como infinito no merge sort
+#define INFINITY_CHAR 'z' //ultima letra 
+
 
 typedef struct dado{
 	char state[TAMs], country[TAMc];
 	float lat, longe;
-	int conf,death,recov;
-  int dia,mes,ano;
+	int conf,death,recov,dia,mes,ano;
 }Dado;
 
 int tamanho(char arq[]){
@@ -28,15 +30,133 @@ int tamanho(char arq[]){
 }
 
 
+int escreve(Dado d[], int tamanho){
+	FILE *out;
+	int i;
+	char buffer[10];
+	
+	out = fopen("passa_nois.txt", "w"); //criando o arquivo no modo escrita
+	if (out == NULL){ //checando se o arquivo abriu
+       return 1; //nao abriu retornando 1
+   }
+   
+   for(i = 0; i<tamanho;i++){
+	   	fwrite(d[i].country,1,strlen(d[i].country),out);//imprimindo no arquivo o pais
+	   	fwrite("\n",1,1,out);
+	   	fwrite("Data:",1,strlen("Data:"),out);//imprimindo no arquivo o pais
+	   	fprintf(out,"%d", d[i].dia);
+	   	fwrite("/",1,1,out);
+		fprintf(out,"%d", d[i].mes);
+	  	fwrite("/",1,1,out);
+		fprintf(out,"%d", d[i].ano);
+		fwrite("\n",1,1,out);   
+		fprintf(out,"%.4f",d[i].lat);		
+		fwrite("\n",1,1,out);
+   }
+	fclose(out);
+}
+
+void merging(Dado d[], int inicio, int meio,int fim){ // intercala numeros
+	int t,i,j,n1,n2;
+	n1 = meio - inicio +1; 
+	n2 = fim - meio;
+	
+	Dado *L,*R;
+	
+	L = (Dado*)malloc((n1+1)*sizeof(Dado)); 
+	R = (Dado*)malloc((n2+1)*sizeof(Dado)); 
+	
+	if(L == NULL || R == NULL) { //checagem para ver se malloc deu certo
+      printf("malloc falhou, ex == NULL!\n");
+      return;
+   }
+	
+	
+	for(i = 0; i < n1; i++){
+		
+		L[i] = d[i+inicio];
+			
+	}		
+		
+
+	for(j = 0; j<n2; j++){
+		
+		R[j] = d[j+meio+1];
+		
+	}
+	
+	
+	i = 0;
+	j = 0;
+	
+	for(t = inicio; i<n1 && j<n2; t++){
+		if(strcmp(L[i].country,R[j].country) <= 0){
+			
+			d[t] = L[i];
+			i++;
+		}
+		else{
+			
+			d[t] = R[j];
+			j++;
+		}
+	}
+	while(i < n1){
+		d[t] = L[i];
+		i++;
+		t++;
+	}
+	while(j < n2){
+		d[t] = R[j];
+		j++;
+		t++;
+	}	
+}
+
+
+
+void sort(Dado d[], int inicio, int fim ,char opc){
+	int meio,ii;
+	//printf("inicio %d\nfim %d\n", inicio, fim);
+	if(opc == 'a'){ //vetor nao unitario
+		if(inicio < fim){ // organizando pelo nome do pais
+			meio = (inicio + fim)/2;
+			sort(d,inicio,meio,opc);
+			sort(d,meio + 1,fim,opc);
+			merging(d,inicio,meio,fim);		
+		}
+	}
+		else{ //organizando por latitude ou longitude
+			sort(d,inicio,meio,opc);
+			sort(d,meio + 1,fim,opc);
+		//	intercala_float(d,inicio,meio,fim);
+		}
+		
+		
+}
+
+
+void insercao(Dado d[], int tamanho){
+	int i, j;
+	Dado x;
+	for (i=1; i<tamanho; i++) {
+		x = d[i];
+		j=i-1;
+		while ((j>=0) && (strcmp(x.country,d[j].country) < 0)) {
+			d[j+1] = d[j];
+			j--;
+		}
+		d[j+1] = x;
+	}
+}
 
 int main(){
-   	char c[100];
+   	char c[100],aux[20], opcao;
    	int i,j,k,t,q,r,s,v,y,u,count;
-    k = tamanho("covid_19_clean_complete.csv");//calculando quantas colunas o arquvo tem	
-	Dado *ex; //criando ponteiro para malloc
-	char aux[20];
+    k = tamanho("covid_19_clean_complete.csv");//calculando quantas linhas o arquvo tem	
 	
-	ex = malloc(k*sizeof(Dado)); //malloc da quantidade das colunas 
+	Dado *ex; //criando ponteiro para malloc
+	ex = (Dado*)malloc(k*sizeof(Dado)); //malloc da quantidade das linhas 
 	if (ex == NULL) { //checagem para ver se malloc deu certo
       printf("malloc falhou, ex == NULL!\n");
       return 1;
@@ -145,11 +265,30 @@ for(i = 0; !feof(fptr) ; i++){
     }
 
 
-  k = tamanho("covid_19_clean_complete.csv");//calculando quantas colunas o arquvo tem
-  for(i = 1; i<k;i++){
-  	printf(" i: %d\n Country: %s\n State: %s\n Latitude: %f\n Longitude: %f\n Confirmados: %d\n Mortes: %d\n Recuperados: %d\n Data: %d/%d/%d \n\n\n",i , ex[i].country, ex[i].state
-  	  , ex[i].lat, ex[i].longe, ex[i].conf, ex[i].death, ex[i].recov, ex[i].dia, ex[i].mes, ex[i].ano);
-  }	
+  
+
+
+	printf("Ordenar por:\n(a) Pais\n(b) Latitude\n(c) Longitude\n");
+	scanf("%c", &opcao);
+	k = tamanho("covid_19_clean_complete.csv");//calculando quantas colunas o arquvo tem
+	switch (opcao){
+    	case 'a':
+     		//sort(ex, 0, k-1, opcao);
+			insercao(ex,k);
+			break;
+
+   		case 'b':
+   		//	mergesort(ex.state, ex.lat, 0, k, opcao);
+   		break;
+
+		case 'c':
+     	//	mergesort(ex.state, ex.longe, 0, k, opcao);		
+		break;
+   
+   		default:
+    		printf("Escolha um numero entre a,b e c");
+	}
+    escreve(ex,k);
 	
 	return 0;
 }
