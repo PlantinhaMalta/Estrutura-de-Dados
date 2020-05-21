@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "covid19.h"
 
 
@@ -8,8 +9,11 @@
 int main()
 {
     char abort,flag, pais[TAMs];
-    int k,p,h,i,ind, dia,ano,mes;
+    int k,p,h,i,ind, dia,ano,mes, dia2, mes2, ano2;
+    clock_t start, end;
+    double cpu_time_used;
     Dado *covid_data;
+    Mortes proc_mort;
 
     k = tamanho("covid_19_clean_complete.csv");
 
@@ -50,7 +54,12 @@ int main()
         scanf(" %c",&opc2);
     }
     while(opc2 != '1' && opc2 != '2' && opc2 != '3');
+    start = clock(); //pegando o tempo da ordenacao
     sort(covid_data,0,k-1,opc1,opc2,k);
+    end = clock();
+    cpu_time_used = ((double)(end - start))/ CLOCKS_PER_SEC;
+    printf("\nTempo de execucao da ordenacao foi de %.5lf\n", cpu_time_used);
+
     p = escreve(covid_data,k);
     if(p)
     {
@@ -75,14 +84,15 @@ int main()
 
     inicia(b,k);
     hash_data(covid_data, b,k);
-
-    for(i = 0; i < k; i++)  //para printar a tabela hash
+/*
+    for(i = 0; i < k; i++)  //para printar a tabela hash descomente esse codigo
     {
         if(b[i].virgem != -1)
         {
             printf("%d: %s - %d/%d/%d\n", i,b[i].chave.country, b[i].chave.dia, b[i].chave.mes, b[i].chave.ano);
         }
     }
+*/
     flag = 'a';
     printf("Deseja pesquisar algum pais?\ns) Sim\nn) Nao\n");
     scanf(" %c", &flag);
@@ -107,13 +117,9 @@ int main()
             pais[strlen(pais) - 1] = '\0';
 
 
-
-        printf("\nDigite o dia:\n");
-        scanf("%d", &dia);
-        printf("\nDigite o mes:\n");
-        scanf("%d", &mes);
-        printf("\nDigite o ano:\n");
-        scanf("%d", &ano);
+        mes = pedir_mes();
+        dia = pedir_dia(mes);
+        ano = pedir_ano();
 
         printf("Pesquisando por: %s na data %d/%d/%d... \n", pais,dia,mes,ano);
         ind = buscar(b,pais, dia,mes,ano,k);
@@ -139,12 +145,46 @@ int main()
 
     }
 
+    /*
     printf("**************** Digite alguma opcao de acompanhamento ****************\n\n");
     printf("1)Pais com maior numero de casos confirmados\n");
     printf("2)Pais com maior numero de mortes\n");
     printf("3)Pais com maior numero de casos recuperados\n");
+*/
 
 
+    flag = 'a';
+    printf("Deseja pesquisar o pais com maior numero de mortes em um intervalo?\ns) Sim\nn) Nao\n");
+    scanf(" %c", &flag);
+
+    while(flag != 's' && flag != 'n')
+    {
+        printf("Escolha uma opcao entre Sim ou Nao\n");
+        printf("Deseja pesquisar o pais com maior numero de mortes em um intervalo?\ns) Sim\nn) Nao\n");
+        scanf(" %c", &flag);
+    }
+
+
+
+    if(flag == 's'){
+        while(flag == 's'){
+            printf("Primeira data:\n");
+            mes = pedir_mes();
+            dia = pedir_dia(mes);
+            ano = pedir_ano();
+
+            printf("Segunda data:\n");
+            mes2 = pedir_mes();
+            dia2 = pedir_dia(mes2);
+            ano2 = pedir_ano();
+
+
+            printf("O pais com maior numero de mortes nesse intervalo e:\n");
+            procura_morte(covid_data,dia,mes,ano,dia2,mes2,ano2,k);
+            printf("Deseja consultar por intervalo novamente?\n");
+            scanf(" %c", &flag);
+        }
+    }
 
 
 
