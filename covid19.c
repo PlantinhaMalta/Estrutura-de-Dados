@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 #include "covid19.h"
 
 #define TAMs 50
@@ -33,7 +34,6 @@ int escreve(Dado d[], int tamanho)
 {
     FILE *out;
     int i;
-    char buffer[10];
 
     out = fopen("out.txt", "w");
     if (out == NULL)
@@ -286,8 +286,8 @@ void sort(Dado d[], int inicio, int fim,char opc1, char opc2, int tamanho)
 void leitura(Dado *dad, char arq[])
 {
 
-    char c[100],aux[20], opcao;
-    int i,j,k,t,q,r,s,v,y,u,count,tam;
+    char c[100],aux[20];
+    int i,j,k,t,q,r,s,v,y,u,count;
     //Cálculo do tamanho necessário de dados
 
     if (dad == NULL)                                        //Problemas de Alocação
@@ -488,11 +488,11 @@ int buscar(Bucket b[],char pais[], int dia, int mes,int ano,int tam)
 int pedir_mes()
 {
     int mes;
-    printf("\nDigite um mes entre 1(Janeiro) e 5(Maio):\n"); //pedimos o mes primeiro para filtrar quais meses tem dia 30 ou 31
+    printf("\nDigite um mes entre Janeiro (1) e Maio (5): "); //pedimos o mes primeiro para filtrar quais meses tem dia 30 ou 31
     scanf("%d", &mes);
     while(mes < 1 || mes > 5)
     {
-        printf("\nDigite um mes entre 1(Janeiro) e 5(Maio):\n");
+        printf("\nDigite o numero do mes entre Janeiro (1) e Maio (5): ");
         scanf("%d", &mes);
     }
     return mes;
@@ -501,13 +501,13 @@ int pedir_mes()
 int pedir_dia(int mes)
 {
     int dia;
-    printf("\nDigite o dia:\n");
+    printf("Digite o dia: ");
     scanf("%d", &dia);
     if(mes == 1)
     {
         while(dia < 22 || dia > 31)
         {
-            printf("O mes 1(Janeiro) tem dados computados somente a partir do dia 22.\nDigite um numero entre 22 e 31:\n");
+            printf("O mes Janeiro tem dados computados somente a partir do dia 22.\nDigite um numero entre 22 e 31:\n");
             scanf("%d", &dia);
         }
     }
@@ -516,7 +516,7 @@ int pedir_dia(int mes)
     {
         while(dia < 1 || dia > 29)
         {
-            printf("O mes 2(Fevereiro) possui 29 dias.\nDigite um numero entre 1 e 29:\n");
+            printf("O mes Fevereiro possui 29 dias.\nDigite um numero entre 1 e 29: ");
             scanf("%d", &dia);
         }
     }
@@ -524,7 +524,7 @@ int pedir_dia(int mes)
     {
         while(dia < 1 || dia > 31)
         {
-            printf("O mes 3(Marco) possui 31 dias.\nDigite um numero entre 1 e 31:\n");
+            printf("O mes Marco possui 31 dias.\nDigite um numero entre 1 e 31: ");
             scanf("%d", &dia);
         }
     }
@@ -532,15 +532,15 @@ int pedir_dia(int mes)
     {
         while(dia < 1 || dia > 30)
         {
-            printf("O mes 4(Abril) possui 30 dias.\nDigite um numero entre 1 e 30:\n");
+            printf("O mes  de Abril possui 30 dias.\nDigite um numero entre 1 e 30: ");
             scanf("%d", &dia);
         }
     }
-    else //maio possui dados computados somente ate dia 8
+    else //maio possui dados computados somente ate dia 20
     {
-        while(dia < 1 || dia > 8)
+        while(dia < 1 || dia > 20)
         {
-            printf("O mes 5(Maio) tem dados computados somente ate dia 8.\nDigite um numero entre 1 e 8:\n");
+            printf("O mes de Maio tem dados computados somente ate dia 20.\nDigite um numero entre 1 e 20: ");
             scanf("%d", &dia);
         }
     }
@@ -550,22 +550,22 @@ int pedir_dia(int mes)
 int pedir_ano()
 {
     int ano;
-    printf("\nDigite somente a dezena do ano que deseja procurar\nCaso queira procurar por 2020, basta digitar 20:\n");
+    printf("Digite o ano correspondente (somente os dois numeros finais): ");
     scanf("%d", &ano);
     while(ano != 20)
     {
-        printf("Por enquanto possuimos somente dados a respeito de 2020.\nDigite o numero 20 para pesquisar sobre os casos desse ano:\n");
+        printf("Por enquanto, possuimos somente dados a respeito de 2020.\nDigite o numero 20 para pesquisar sobre os casos desse ano: ");
         scanf("%d", &ano);
     }
 
     return ano;
 }
 
-void insercao_morte(Mortes m[], int tamanho)
+void insercao_morte(Pais m[], int tamanho)
 {
 
     int i, j;
-    Mortes x;
+    Pais x;
     for (i=1; i<tamanho; i++){
         x = m[i];
         j=i-1;
@@ -581,61 +581,293 @@ void insercao_morte(Mortes m[], int tamanho)
 
 }
 
-void procura_morte(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam){
-    int i,k,j_ini,j_final,p,npais;
-    Mortes m_final[300],m_ini[300],m_total[300];
-    k = 1;
+void insercao_conf(Pais m[], int tamanho)
+{
 
+    int i, j;
+    Pais x;
+    for (i=1; i<tamanho; i++){
+        x = m[i];
+        j=i-1;
 
-    sort(d,0,tam-1,'b','1',tam);
+        while ((j>=0) && (x.confirmados < m[j].confirmados))
+            {
+                m[j+1] = m[j];
+                j--;
+            }
+        m[j+1] = x;
+    }
+    return;
 
-    strcpy(m_ini[0].pais,d[0].country);
-    m_ini[0].mortes = d[0].death;
-    strcpy(m_final[0].pais,d[0].country);
-    m_final[0].mortes = 0;
+}
 
+void insercao_txmort(Pais m[], int tamanho)
+{
 
+    int i, j;
+    Pais x;
+    for (i=1; i<tamanho; i++){
+        x = m[i];
+        j=i-1;
+
+        while ((j>=0) && (x.confirmados < m[j].confirmados))
+            {
+                m[j+1] = m[j];
+                j--;
+            }
+        m[j+1] = x;
+    }
+    return;
+
+}
+
+void insercao_txrecov(Pais m[], int tamanho)
+{
+
+    int i, j;
+    Pais x;
+    for (i=1; i<tamanho; i++){
+        x = m[i];
+        j=i-1;
+
+        while ((j>=0) && (x.tx_recov < m[j].tx_recov))
+            {
+                m[j+1] = m[j];
+                j--;
+            }
+        m[j+1] = x;
+    }
+    return;
+
+}
+
+int preencher_paises(Pais p[], Dado d[],int tamanho, int dia, int mes, int ano){
+    int i,j,npais;
+
+    sort(d,0,tamanho-1,'b','1',tamanho);
+    strcpy(p[0].pais,d[0].country);
+    p[0].mortes = d[0].death;
+    p[0].confirmados = d[0].conf;
+    p[0].recuperados = d[0].recov;
     npais = 1;
-    j_ini= 0;
-    j_final = 0;
+    j = 0;
+    for(i = 0; i < tamanho; i++){
+        if(dia == d[i].dia && mes == d[i].mes && ano == d[i].ano){
+            if(strcmp(d[i].country,p[j].pais) == 0){
+                p[j].mortes += d[i].death;
+                p[j].confirmados += d[i].conf;
+                p[j].recuperados += d[i].recov;
 
-    for(p = 1 ; p < tam ; p++){
+            }else{
+                j++;
+                p[j].mortes = d[i].death;
+                p[j].confirmados = d[i].conf;
+                p[j].recuperados = d[i].recov;
+                p[j].tx_mort = 0.0;
+                p[j].tx_recov = 0.0;
+                p[j].var_med = 0.0;
+                strcpy(p[j].pais,d[i].country);
+                npais++;
 
-        if(d[p].dia == dia && d[p].mes == mes && d[p].ano == ano){
-            if(strcmp(d[p].country,m_ini[j_ini].pais) == 0){
-                m_ini[j_ini].mortes += d[p].death;
-            }
-            else{
-               j_ini++;
-               m_ini[j_ini].mortes = d[p].death;
-               strcpy(m_ini[j_ini].pais,d[p].country);
-               npais++;
-            }
-        }
-       if(d[p].dia == dia2 && d[p].mes == mes2 && d[p].ano == ano2){
-            if(strcmp(d[p].country,m_final[j_final].pais) == 0){
-                m_final[j_final].mortes += d[p].death;
-            }
-            else{
-               j_final++;
-               m_final[j_final].mortes = d[p].death;
-               strcpy(m_final[j_final].pais,d[p].country);
             }
         }
     }
+    return npais;
 
-    for(i = 0; i < npais; i++){
+}
+
+
+void procura_morte(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam){
+    int i,npaises;
+    Pais m_final[300],m_ini[300],m_total[300];
+
+    npaises = preencher_paises(m_ini,d,tam,dia,mes,ano);
+    preencher_paises(m_final,d,tam,dia2,mes2,ano2);
+
+    for(i = 0; i < npaises; i++){
         strcpy(m_total[i].pais,m_ini[i].pais);
         if(m_ini[i].mortes <= m_final[i].mortes)
             m_total[i].mortes = m_final[i].mortes - m_ini[i].mortes;
         else m_total[i].mortes = m_ini[i].mortes - m_final[i].mortes;
+
     }
-    insercao_morte(m_total,npais);
+    insercao_morte(m_total,npaises);
     i = 1;
-    while(m_total[npais-1].mortes == m_total[npais-i].mortes && i <= npais){
-        printf("%s : %d\n",m_total[npais-i].pais,m_total[npais-i].mortes);
+    while(m_total[npaises-1].mortes == m_total[npaises-i].mortes && i <= npaises){
+        printf("\n%s : %d\n",m_total[npaises-i].pais,m_total[npaises-i].mortes);
         i++;
     }
     printf("\n");
+}
+
+void ficha(char pais[], Dado d[], int tam, Bucket b[], int dia, int mes, int ano){
+    int ind = buscar(b,pais, dia,mes,ano,tam);
+    printf("Indice na tabela hash: %d\n", ind);
+    printf("Nome: %s\n", pais);
+    printf("Numero de Casos:%d\nNumero de Curas:%d\nNumero de Mortos:%d\n\n", b[ind].chave.conf,b[ind].chave.recov,b[ind].chave.death);
+}
+
+
+void sugestoes(char pais[],Dado d[], int tam){
+    int i,j;
+    j = 1;
+    char paises[10][TAMc];
+    strcpy(paises[0],"nulo");
+    for(i = 0; i < tam; i++){
+        if(d[i].country[0] == toupper(pais[0])){
+            if(d[i].country[1] == pais[1]){
+                    if(strcmp(paises[j-1],d[i].country) != 0){
+                        strcpy(paises[j],d[i].country);
+                        printf("\n%s\n",paises[j]);
+                        j++;
+                    }
+            }
+        }
+    }
+    if(j == 1)
+        printf("\n#\n");
+    printf("\n");
+    return;
+
+}
+
+int achou_pais(char pais[],Dado d[], int tam){
+    int i;
+    for(i = 0; i < tam; i++){
+
+        if(strcmp(pais,d[i].country) == 0){
+            return 1;
+        }
+
+    }
+    return 0;
+}
+
+
+void procura_conf(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam){
+    int i,npaises;
+    Pais m_final[300],m_ini[300],m_total[300];
+
+    npaises = preencher_paises(m_ini,d,tam,dia,mes,ano);
+    preencher_paises(m_final,d,tam,dia2,mes2,ano2);
+
+    for(i = 0; i < npaises; i++){
+        strcpy(m_total[i].pais,m_ini[i].pais);
+        if(m_ini[i].confirmados <= m_final[i].confirmados)
+            m_total[i].confirmados = m_final[i].confirmados - m_ini[i].confirmados;
+        else m_total[i].confirmados = m_ini[i].confirmados - m_final[i].confirmados;
+
+    }
+
+    insercao_conf(m_total,npaises);
+    i = 1;
+    while(m_total[npaises-1].confirmados == m_total[npaises-i].confirmados && i <= npaises){
+        printf("\n%s : %d\n",m_total[npaises-i].pais,m_total[npaises-i].confirmados);
+        i++;
+    }
+    printf("\n");
+}
+
+
+void procura_txmort(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam){
+    int i,npaises;
+    Pais m_final[300],m_ini[300],m_total[300];
+
+    npaises = preencher_paises(m_ini,d,tam,dia,mes,ano);
+    preencher_paises(m_final,d,tam,dia2,mes2,ano2);
+
+
+    for(i = 0; i < npaises; i++){
+        strcpy(m_total[i].pais,m_ini[i].pais);
+        if(m_ini[i].mortes <= m_final[i].mortes){
+            m_total[i].mortes = m_final[i].mortes - m_ini[i].mortes;
+            m_total[i].recuperados = m_final[i].recuperados - m_ini[i].recuperados;
+            m_total[i].confirmados = (m_final[i].confirmados + m_final[i].mortes + m_final[i].recuperados) - (m_ini[i].mortes + m_ini[i].recuperados + m_ini[i].confirmados);
+        }else{
+            m_total[i].mortes = m_ini[i].mortes - m_final[i].mortes;
+            m_total[i].recuperados = m_ini[i].recuperados - m_final[i].recuperados;
+            m_total[i].confirmados = (m_ini[i].confirmados + m_ini[i].mortes + m_ini[i].recuperados) - (m_final[i].mortes + m_final[i].recuperados + m_final[i].confirmados);
+        }
+        if((m_total[i].mortes + m_total[i].confirmados + m_total[i].recuperados) != 0)
+            m_total[i].tx_mort = (float)m_total[i].mortes/(float)(m_total[i].confirmados);
+        else m_total[i].tx_mort = 0.0;
+    }
+
+    insercao_txmort(m_total,npaises);
+    i = 1;
+    while(m_total[npaises-1].tx_mort == m_total[npaises-i].tx_mort && i <= npaises){
+        printf("\n%s : %.2f porcento\tTotal de Casos: %d & Mortes: %d\n",m_total[npaises-i].pais,100*m_total[npaises-i].tx_mort,m_total[npaises-i].confirmados,m_total[npaises-i].mortes);
+        i++;
+    }
+    printf("\n");
+}
+
+void procura_txrecov(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam){
+    int i,npaises;
+    Pais m_final[300],m_ini[300],m_total[300];
+
+    npaises = preencher_paises(m_ini,d,tam,dia,mes,ano);
+    preencher_paises(m_final,d,tam,dia2,mes2,ano2);
+
+    for(i = 0; i < npaises; i++){
+        strcpy(m_total[i].pais,m_ini[i].pais);
+        if(m_ini[i].mortes <= m_final[i].mortes){
+            m_total[i].mortes = m_final[i].mortes - m_ini[i].mortes;
+            m_total[i].recuperados = m_final[i].recuperados - m_ini[i].recuperados;
+            m_total[i].confirmados = (m_final[i].confirmados + m_final[i].mortes + m_final[i].recuperados) - (m_ini[i].mortes + m_ini[i].recuperados + m_ini[i].confirmados);
+
+        }else{
+            m_total[i].mortes = m_ini[i].mortes - m_final[i].mortes;
+            m_total[i].recuperados = m_ini[i].recuperados - m_final[i].recuperados;
+            m_total[i].confirmados = (m_ini[i].confirmados + m_ini[i].mortes + m_ini[i].recuperados) - (m_final[i].mortes + m_final[i].recuperados + m_final[i].confirmados);
+        }
+
+        if((m_total[i].mortes + m_total[i].confirmados + m_total[i].recuperados) == 0)
+            m_total[i].tx_recov = 0.0;
+        else m_total[i].tx_recov = (float)(m_total[i].recuperados)/(float)(m_total[i].confirmados);
+    }
+
+    insercao_txrecov(m_total,npaises);
+    i = 1;
+    while(m_total[npaises-1].tx_recov == m_total[npaises-i].tx_recov && i <= npaises){
+        printf("\n%s : %.2f porcento\tTotal de Casos: %d & Recup.: %d \n",m_total[npaises-i].pais,100*m_total[npaises-i].tx_recov,m_total[npaises-i].confirmados,m_total[npaises-i].recuperados);
+        i++;
+    }
+    printf("\n");
+}
+
+void procura_varmed(Dado d[],char country[], int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam){
+    int i,npaises,ok;
+    Pais m_ini[300],m_final[300],m_total[300];
+
+    npaises = preencher_paises(m_ini,d,tam,dia,mes,ano);
+    preencher_paises(m_final,d,tam,dia2,mes2,ano2);
+
+    for(i = 0; i < npaises; i++){
+        strcpy(m_total[i].pais,m_ini[i].pais);
+        if(strcmp(m_total[i].pais,country) == 0){
+            if(m_ini[i].mortes <= m_final[i].mortes){
+                m_total[i].mortes = m_final[i].mortes - m_ini[i].mortes;
+                m_total[i].recuperados = m_final[i].recuperados - m_ini[i].recuperados;
+                m_total[i].confirmados = (m_final[i].confirmados + m_final[i].mortes + m_final[i].recuperados) - (m_ini[i].mortes + m_ini[i].recuperados + m_ini[i].confirmados);
+                m_total[i].var_med = (float)m_total[i].confirmados/(float)(m_final[i].confirmados + m_final[i].mortes + m_final[i].recuperados);
+
+
+            }else{
+                m_total[i].mortes = m_ini[i].mortes - m_final[i].mortes;
+                m_total[i].recuperados = m_ini[i].recuperados - m_final[i].recuperados;
+                m_total[i].confirmados = (m_ini[i].confirmados + m_ini[i].mortes + m_ini[i].recuperados) - (m_final[i].mortes + m_final[i].recuperados + m_final[i].confirmados);
+                m_total[i].var_med = (float)m_total[i].confirmados/(float)(m_ini[i].confirmados + m_ini[i].mortes + m_ini[i].recuperados);
+            }
+        m_total[i].tx_mort = (float)(m_total[i].mortes)/(float)(m_total[i].mortes + m_total[i].confirmados + m_total[i].recuperados);
+        m_total[i].tx_recov = (float)(m_total[i].recuperados)/(float)(m_total[i].mortes + m_total[i].confirmados + m_total[i].recuperados);
+        printf("\nTaxa de Mortalidade : %.2f porcento\tConf.: %.1f & Mortos: %.1f",100*m_total[i].tx_mort,(float)(m_total[i].mortes + m_total[i].confirmados + m_total[i].recuperados),(float)m_total[i].mortes);
+        printf("\nTaxa de Recuperacao : %.2f porcento\tConf.: %.1f & Rec.: %.1f",100*m_total[i].tx_recov,(float)(m_total[i].mortes + m_total[i].confirmados + m_total[i].recuperados),(float)(m_total[i].recuperados));
+        printf("\nVariacao do Numero de Casos : %f porcento",100*m_total[i].var_med);
+        printf("\n");
+        }
+    }
+
+    return;
 }
 

@@ -12,10 +12,12 @@ typedef struct bucket{
 	int virgem;
 }Bucket;
 
-typedef struct mortes{
+typedef struct pais{
     char pais[TAMc];
-    int  mortes;
-}Mortes;
+    int mortes,confirmados,recuperados;
+    float tx_recov,tx_mort;
+    float var_med;
+}Pais;
 
 int tamanho(char arq[]);
 
@@ -43,6 +45,30 @@ int pedir_dia(int mes);
 
 int pedir_ano();
 
-void insercao_morte(Mortes m[], int tamanho);
+void insercao_morte(Pais m[], int tamanho);
+
+void insercao_conf(Pais m[], int tamanho);
+
+void insercao_txmort(Pais m[], int tamanho);
+
+void insercao_txrecov(Pais m[], int tamanho);
 
 void procura_morte(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2, int tam);
+
+int preencher_paises(Pais p[], Dado d[],int tamanho, int dia, int mes, int ano);
+
+void ficha(char pais[], Dado d[], int tam, Bucket b[], int dia, int mes, int ano);
+
+void sugestoes(char pais[],Dado d[], int tam);
+
+int achou_pais(char pais[],Dado d[], int tam);
+
+int tem_provincia(Dado d[],char pais[],int tam);
+
+void procura_conf(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam);
+
+void procura_txmort(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam);
+
+void procura_txrecov(Dado d[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam);
+
+void procura_varmed(Dado d[],char country[],int dia,int mes,int ano,int dia2,int mes2,int ano2,int tam);
