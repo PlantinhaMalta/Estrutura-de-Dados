@@ -1,4 +1,4 @@
-Este trabalho foi motivado pela atual crise do novo Corona Vírus e sua motivação é ensinar aos alunos como manipular e tratar dados.
+Este trabalho foi motivado pela atual crise do novo Corona Vírus, tendo como motivação ensinar aos alunos como manipular e tratar dados.
 
 Os dados foram retirados de um [arquivo .csv oferecido pelo site Kaggle](https://www.kaggle.com/imdevskp/corona-virus-report).
 
